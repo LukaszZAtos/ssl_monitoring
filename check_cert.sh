@@ -1,9 +1,25 @@
 #!/bin/bash
 
-# Function to check the SSL certificate expiration date
-check_ssl_certificate() {
-    local target=$1
-    local expiration_date=$(echo | openssl x509 -noout -dates -in "$target" 2>/dev/null | grep "notAfter" | cut -d "=" -f 2)
+# Function to check the SSL certificate expiration date from a file
+check_ssl_certificate_from_file() {
+    local file_path=$1
+    local expiration_date=$(echo | openssl x509 -noout -dates -in "$file_path" 2>/dev/null | grep "notAfter" | cut -d "=" -f 2)
+
+    check_ssl_certificate_common "$expiration_date" "$file_path"
+}
+
+# Function to check the SSL certificate expiration date from a URL
+check_ssl_certificate_from_url() {
+    local url=$1
+    local expiration_date=$(echo | openssl s_client -connect "$url" 2>/dev/null | openssl x509 -noout -dates 2>/dev/null | grep "notAfter" | cut -d "=" -f 2)
+
+    check_ssl_certificate_common "$expiration_date" "$url"
+}
+
+# Common function to check the SSL certificate expiration date
+check_ssl_certificate_common() {
+    local expiration_date=$1
+    local target=$2
 
     # Convert expiration date to seconds since epoch
     local expiration_epoch=$(date -d "$expiration_date" +%s)
@@ -33,14 +49,14 @@ while getopts ":f:u:" opt; do
     case $opt in
         f)
             if [ -f "$OPTARG" ]; then
-                check_ssl_certificate "$OPTARG"
+                check_ssl_certificate_from_file "$OPTARG"
             else
                 echo "File not found: $OPTARG"
                 exit 1
             fi
             ;;
         u)
-            check_ssl_certificate "$OPTARG"
+            check_ssl_certificate_from_url "$OPTARG"
             ;;
         \?)
             echo "Invalid option: -$OPTARG"
@@ -52,4 +68,3 @@ while getopts ":f:u:" opt; do
             ;;
     esac
 done
-/
