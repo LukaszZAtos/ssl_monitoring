@@ -3,7 +3,7 @@
 # Function to check the SSL certificate expiration date
 check_ssl_certificate() {
     local target=$1
-    local expiration_date=$(echo | openssl s_client -connect "$target" 2>/dev/null | openssl x509 -noout -dates 2>/dev/null | grep "notAfter" | cut -d "=" -f 2)
+    local expiration_date=$(echo | openssl x509 -noout -dates -in "$target" 2>/dev/null | grep "notAfter" | cut -d "=" -f 2)
 
     # Convert expiration date to seconds since epoch
     local expiration_epoch=$(date -d "$expiration_date" +%s)
@@ -31,7 +31,7 @@ while getopts ":f:u:" opt; do
     case $opt in
         f)
             if [ -f "$OPTARG" ]; then
-                check_ssl_certificate <(openssl x509 -noout -text -in "$OPTARG")
+                check_ssl_certificate "$OPTARG"
             else
                 echo "File not found: $OPTARG"
                 exit 1
