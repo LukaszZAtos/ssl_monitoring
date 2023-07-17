@@ -20,8 +20,10 @@ check_ssl_certificate() {
 
     if [ $days_remaining -lt 0 ]; then
         echo "WARNING: SSL certificate for $target has expired on $expiration_date"
+        exit 1
     elif [ $days_remaining -lt 14 ]; then
         echo "WARNING: SSL certificate for $target will expire in $days_remaining days on $expiration_date"
+        exit 1
     else
         echo "OK: SSL certificate for $target is still valid for $days_remaining days until $expiration_date"
     fi
@@ -50,3 +52,4 @@ while getopts ":f:u:" opt; do
             ;;
     esac
 done
+/
